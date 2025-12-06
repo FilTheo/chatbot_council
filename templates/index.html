@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Council of Models</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Crimson+Text:ital@0;1&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --stone: #1a1a1f;
+            --stone-light: #2a2a32;
+            --gold: #d4a857;
+            --gold-dim: #8b7355;
+            --blood: #8b0000;
+            --parchment: #f4e4c1;
+            --glow: rgba(212, 168, 87, 0.4);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Crimson Text', Georgia, serif;
+            background: var(--stone);
+            color: var(--parchment);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Texture overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+            opacity: 0.03;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            padding: 2rem 1rem;
+            border-bottom: 1px solid var(--gold-dim);
+            background: linear-gradient(180deg, var(--stone-light) 0%, var(--stone) 100%);
+        }
+
+        h1 {
+            font-family: 'Cinzel', serif;
+            font-size: clamp(1.8rem, 5vw, 3rem);
+            font-weight: 700;
+            color: var(--gold);
+            text-shadow: 0 0 30px var(--glow);
+            letter-spacing: 0.15em;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            font-style: italic;
+            color: var(--gold-dim);
+            font-size: 1.1rem;
+        }
+
+        /* Main Layout */
+        main {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+            gap: 2rem;
+        }
+
+        /* Question Input */
+        .question-panel {
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        .question-panel label {
+            display: block;
+            font-family: 'Cinzel', serif;
+            color: var(--gold);
+            margin-bottom: 0.75rem;
+            font-size: 1.1rem;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        #question-input {
+            flex: 1;
+            padding: 1rem;
+            font-family: inherit;
+            font-size: 1rem;
+            background: var(--stone-light);
+            border: 1px solid var(--gold-dim);
+            color: var(--parchment);
+            border-radius: 4px;
+        }
+
+        #question-input:focus {
+            outline: none;
+            border-color: var(--gold);
+            box-shadow: 0 0 15px var(--glow);
+        }
+
+        #convene-btn {
+            padding: 1rem 2rem;
+            font-family: 'Cinzel', serif;
+            font-size: 1rem;
+            background: linear-gradient(180deg, var(--gold) 0%, var(--gold-dim) 100%);
+            border: none;
+            color: var(--stone);
+            cursor: pointer;
+            border-radius: 4px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            transition: all 0.3s ease;
+        }
+
+        #convene-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px var(--glow);
+        }
+
+        #convene-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Round Table */
+        .council-chamber {
+            position: relative;
+            width: min(90vw, 500px);
+            height: min(90vw, 500px);
+        }
+
+        .round-table {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 45%;
+            height: 45%;
+            background: radial-gradient(circle, #3d3528 0%, #2a2520 100%);
+            border-radius: 50%;
+            border: 4px solid var(--gold-dim);
+            box-shadow:
+                0 0 30px rgba(0, 0, 0, 0.5),
+                inset 0 0 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .table-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: 'Cinzel', serif;
+            font-size: 0.8rem;
+            color: var(--gold-dim);
+            text-align: center;
+        }
+
+        /* Council Members */
+        .member {
+            position: absolute;
+            width: 90px;
+            height: 90px;
+            transform: translate(-50%, -50%);
+            transition: all 0.5s ease;
+        }
+
+        .member-avatar {
+            width: 100%;
+            height: 100%;
+            background: var(--stone-light);
+            border: 3px solid var(--gold-dim);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .member.active .member-avatar {
+            border-color: var(--gold);
+            box-shadow: 0 0 20px var(--glow);
+            animation: pulse 2s infinite;
+        }
+
+        .member.thinking .member-avatar {
+            animation: thinking 1s infinite;
+        }
+
+        .member.eliminated {
+            opacity: 0;
+            transform: translate(-50%, -50%) scale(0) rotate(180deg);
+        }
+
+        .member.eliminated .member-avatar {
+            border-color: var(--blood);
+            background: var(--blood);
+        }
+
+        .member-name {
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Cinzel', serif;
+            font-size: 0.6rem;
+            color: var(--gold-dim);
+            white-space: nowrap;
+            text-align: center;
+            max-width: 100px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .member.active .member-name {
+            color: var(--gold);
+        }
+
+        /* Speech Bubble */
+        .speech-bubble {
+            position: absolute;
+            background: var(--stone-light);
+            border: 2px solid var(--gold-dim);
+            border-radius: 8px;
+            padding: 0.75rem;
+            max-width: 200px;
+            min-width: 150px;
+            opacity: 0;
+            transform: scale(0.8);
+            transition: all 0.3s ease;
+            pointer-events: none;
+            z-index: 10;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        }
+
+        .speech-bubble.show {
+            opacity: 1;
+            transform: scale(1);
+            pointer-events: auto;
+        }
+
+        .speech-bubble::before {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 0;
+            border: 8px solid transparent;
+        }
+
+        /* Arrow positioning based on member position */
+        .speech-bubble.arrow-left::before {
+            right: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+            border-right-color: var(--gold-dim);
+        }
+
+        .speech-bubble.arrow-right::before {
+            left: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+            border-left-color: var(--gold-dim);
+        }
+
+        .speech-bubble.arrow-top::before {
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-bottom-color: var(--gold-dim);
+        }
+
+        .speech-bubble.arrow-bottom::before {
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-top-color: var(--gold-dim);
+        }
+
+        .speech-text {
+            color: var(--parchment);
+            font-size: 0.75rem;
+            line-height: 1.4;
+            max-height: 120px;
+            overflow-y: auto;
+            word-wrap: break-word;
+        }
+
+        .member.active .speech-bubble {
+            border-color: var(--gold);
+            box-shadow: 0 4px 12px rgba(212, 168, 87, 0.3);
+        }
+
+        /* Arbiter Section */
+        .arbiter-section {
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .arbiter-throne {
+            position: relative;
+            display: inline-block;
+            padding: 1.5rem;
+            background: radial-gradient(circle, var(--stone-light) 0%, var(--stone) 100%);
+            border: 2px solid var(--gold-dim);
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+        }
+
+        .arbiter-avatar {
+            width: 100px;
+            height: 100px;
+            background: var(--stone-light);
+            border: 3px solid var(--gold-dim);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            margin: 0 auto;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .arbiter-throne.thinking .arbiter-avatar {
+            border-color: var(--gold);
+            box-shadow: 0 0 30px var(--glow);
+            animation: pulse 2s infinite;
+        }
+
+        .arbiter-name {
+            font-family: 'Cinzel', serif;
+            color: var(--gold);
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+            letter-spacing: 0.1em;
+        }
+
+        .arbiter-decision-box {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: var(--stone-light);
+            border: 2px solid var(--gold-dim);
+            border-radius: 8px;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all 0.5s ease;
+            display: none;
+        }
+
+        .arbiter-decision-box.show {
+            opacity: 1;
+            transform: translateY(0);
+            display: block;
+        }
+
+        .arbiter-decision-label {
+            font-family: 'Cinzel', serif;
+            color: var(--gold);
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+            letter-spacing: 0.05em;
+        }
+
+        .arbiter-decision-text {
+            color: var(--parchment);
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+
+        /* Status Panel */
+        .status-panel {
+            width: 100%;
+            max-width: 600px;
+            background: var(--stone-light);
+            border: 1px solid var(--gold-dim);
+            border-radius: 4px;
+            padding: 1.5rem;
+        }
+
+        .status-header {
+            font-family: 'Cinzel', serif;
+            color: var(--gold);
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .phase-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background: var(--gold);
+            border-radius: 50%;
+            animation: blink 1s infinite;
+        }
+
+        #status-text {
+            color: var(--parchment);
+            line-height: 1.6;
+            min-height: 60px;
+        }
+
+        /* Log */
+        .log-panel {
+            width: 100%;
+            max-width: 600px;
+            background: var(--stone-light);
+            border: 1px solid var(--gold-dim);
+            border-radius: 4px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .log-header {
+            font-family: 'Cinzel', serif;
+            color: var(--gold-dim);
+            font-size: 0.9rem;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--gold-dim);
+            position: sticky;
+            top: 0;
+            background: var(--stone-light);
+        }
+
+        #log-content {
+            padding: 0.75rem 1rem;
+            font-size: 0.85rem;
+            color: var(--gold-dim);
+        }
+
+        .log-entry {
+            padding: 0.25rem 0;
+            border-bottom: 1px solid rgba(212, 168, 87, 0.1);
+        }
+
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+
+        .log-entry.elimination {
+            color: var(--blood);
+        }
+
+        .log-entry.success {
+            color: #4a9;
+        }
+
+        /* Answers Panel */
+        .answers-panel {
+            width: 100%;
+            max-width: 800px;
+            background: var(--stone-light);
+            border: 1px solid var(--gold-dim);
+            border-radius: 4px;
+            display: none;
+        }
+
+        .answers-panel.show {
+            display: block;
+        }
+
+        .answers-header {
+            font-family: 'Cinzel', serif;
+            color: var(--gold-dim);
+            font-size: 0.9rem;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--gold-dim);
+            position: sticky;
+            top: 0;
+            background: var(--stone-light);
+        }
+
+        #answers-content {
+            padding: 1rem;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .answer-block {
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: var(--stone);
+            border-left: 3px solid var(--gold-dim);
+            border-radius: 4px;
+        }
+
+        .answer-block.latest {
+            border-left-color: var(--gold);
+            animation: fadeIn 0.5s ease;
+        }
+
+        .answer-member {
+            font-family: 'Cinzel', serif;
+            color: var(--gold);
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+
+        .answer-text {
+            color: var(--parchment);
+            line-height: 1.6;
+            font-size: 0.9rem;
+            white-space: pre-wrap;
+        }
+
+        /* Final Answer */
+        .final-answer {
+            width: 100%;
+            max-width: 700px;
+            background: linear-gradient(180deg, var(--stone-light) 0%, var(--stone) 100%);
+            border: 2px solid var(--gold);
+            border-radius: 4px;
+            padding: 2rem;
+            display: none;
+        }
+
+        .final-answer.show {
+            display: block;
+            animation: fadeIn 1s ease;
+        }
+
+        .final-answer h2 {
+            font-family: 'Cinzel', serif;
+            color: var(--gold);
+            text-align: center;
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+        }
+
+        .final-answer-content {
+            line-height: 1.8;
+            color: var(--parchment);
+        }
+
+        /* Animations */
+        @keyframes pulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 20px var(--glow);
+            }
+
+            50% {
+                box-shadow: 0 0 40px var(--glow), 0 0 60px var(--glow);
+            }
+        }
+
+        @keyframes thinking {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        @keyframes blink {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.3;
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--stone);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--gold-dim);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>⚔ THE COUNCIL ⚔</h1>
+        <p class="subtitle">Where Models Debate, Vote, and Fall</p>
+    </header>
+
+    <main>
+        <div class="question-panel">
+            <label for="question-input">Pose Your Question to the Council</label>
+            <div class="input-group">
+                <input type="text" id="question-input" placeholder="Ask the council anything...">
+                <button id="convene-btn">CONVENE</button>
+            </div>
+        </div>
+
+        <div class="arbiter-section">
+            <div class="arbiter-throne" id="arbiter-throne">
+                <div class="arbiter-avatar">⚖️</div>
+                <div class="arbiter-name" id="arbiter-name">THE ARBITER</div>
+            </div>
+            <div class="arbiter-decision-box" id="arbiter-decision-box">
+                <div class="arbiter-decision-label">⚖️ ARBITER'S JUDGMENT</div>
+                <div class="arbiter-decision-text" id="arbiter-decision-text"></div>
+            </div>
+        </div>
+
+        <div class="council-chamber">
+            <div class="round-table">
+                <div class="table-center">ROUND<br>TABLE</div>
+            </div>
+            <div id="members-container"></div>
+        </div>
+
+        <div class="status-panel">
+            <div class="status-header">
+                <span class="phase-indicator" id="phase-dot"></span>
+                <span id="phase-name">Awaiting Question</span>
+            </div>
+            <div id="status-text">The council awaits your query. Pose a question and the models shall deliberate.</div>
+        </div>
+
+        <div class="log-panel">
+            <div class="log-header">📜 Council Log</div>
+            <div id="log-content"></div>
+        </div>
+
+        <div class="answers-panel" id="answers-panel">
+            <div class="answers-header">💬 Current Answers</div>
+            <div id="answers-content"></div>
+        </div>
+
+        <div class="final-answer" id="final-answer">
+            <h2>🏆 The Council Has Spoken</h2>
+            <div class="final-answer-content" id="final-answer-content"></div>
+        </div>
+    </main>
+
+    <script>
+        // State
+        let members = [];
+        let memberElements = {};
+
+        // Emoji avatars for models
+        const avatars = ['🧙', '🧝', '🧛', '🤖', '👁️', '🦉', '🐉', '⚗️'];
+
+        // DOM elements
+        const membersContainer = document.getElementById('members-container');
+        const questionInput = document.getElementById('question-input');
+        const conveneBtn = document.getElementById('convene-btn');
+        const phaseDot = document.getElementById('phase-dot');
+        const phaseName = document.getElementById('phase-name');
+        const statusText = document.getElementById('status-text');
+        const logContent = document.getElementById('log-content');
+        const answersPanel = document.getElementById('answers-panel');
+        const answersContent = document.getElementById('answers-content');
+        const finalAnswer = document.getElementById('final-answer');
+        const finalAnswerContent = document.getElementById('final-answer-content');
+        const arbiterThrone = document.getElementById('arbiter-throne');
+        const arbiterName = document.getElementById('arbiter-name');
+        const arbiterDecisionBox = document.getElementById('arbiter-decision-box');
+        const arbiterDecisionText = document.getElementById('arbiter-decision-text');
+
+        // Initialize
+        async function init() {
+            try {
+                const res = await fetch('/api/config');
+                const config = await res.json();
+                members = config.members;
+                renderMembers();
+
+                // Set arbiter name
+                if (config.arbiter) {
+                    arbiterName.textContent = getShortName(config.arbiter);
+                }
+            } catch (e) {
+                // Fallback demo members
+                members = ['Model-A', 'Model-B', 'Model-C', 'Model-D', 'Model-E'];
+                renderMembers();
+            }
+        }
+
+        // Render members around the table
+        function renderMembers() {
+            membersContainer.innerHTML = '';
+            memberElements = {};
+
+            const chamber = document.querySelector('.council-chamber');
+            const size = chamber.offsetWidth;
+            const centerX = size / 2;
+            const centerY = size / 2;
+            const radius = size * 0.4;
+
+            members.forEach((member, i) => {
+                const angle = (i / members.length) * 2 * Math.PI - Math.PI / 2;
+                const x = centerX + radius * Math.cos(angle);
+                const y = centerY + radius * Math.sin(angle);
+
+                // Determine speech bubble position and arrow direction
+                const bubbleOffset = 110; // Distance from avatar
+                let bubbleX, bubbleY, arrowClass;
+
+                // Position bubble based on angle
+                if (angle >= -Math.PI / 4 && angle < Math.PI / 4) {
+                    // Right side
+                    bubbleX = x + bubbleOffset;
+                    bubbleY = y;
+                    arrowClass = 'arrow-left';
+                } else if (angle >= Math.PI / 4 && angle < 3 * Math.PI / 4) {
+                    // Bottom side
+                    bubbleX = x;
+                    bubbleY = y + bubbleOffset;
+                    arrowClass = 'arrow-top';
+                } else if (angle >= 3 * Math.PI / 4 || angle < -3 * Math.PI / 4) {
+                    // Left side
+                    bubbleX = x - bubbleOffset;
+                    bubbleY = y;
+                    arrowClass = 'arrow-right';
+                } else {
+                    // Top side
+                    bubbleX = x;
+                    bubbleY = y - bubbleOffset;
+                    arrowClass = 'arrow-bottom';
+                }
+
+                const el = document.createElement('div');
+                el.className = 'member';
+                el.style.left = `${x}px`;
+                el.style.top = `${y}px`;
+                el.innerHTML = `
+                    <div class="member-avatar">${avatars[i % avatars.length]}</div>
+                    <div class="member-name">${getShortName(member)}</div>
+                `;
+
+                // Create speech bubble
+                const bubble = document.createElement('div');
+                bubble.className = `speech-bubble ${arrowClass}`;
+                bubble.style.left = `${bubbleX}px`;
+                bubble.style.top = `${bubbleY}px`;
+                bubble.style.transform = 'translate(-50%, -50%) scale(0.8)';
+                bubble.innerHTML = '<div class="speech-text"></div>';
+
+                membersContainer.appendChild(el);
+                membersContainer.appendChild(bubble);
+
+                memberElements[member] = {
+                    avatar: el,
+                    bubble: bubble,
+                    bubbleText: bubble.querySelector('.speech-text')
+                };
+            });
+        }
+
+        // Get short display name
+        function getShortName(modelId) {
+            // Extract last part after /
+            const parts = modelId.split('/');
+            return parts[parts.length - 1].slice(0, 15);
+        }
+
+        // Add log entry
+        function log(message, type = '') {
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `› ${message}`;
+            logContent.appendChild(entry);
+            logContent.scrollTop = logContent.scrollHeight;
+        }
+
+        // Update status
+        function setStatus(phase, text) {
+            phaseName.textContent = phase;
+            statusText.textContent = text;
+        }
+
+        // Set member state
+        function setMemberState(member, state) {
+            const memberObj = memberElements[member];
+            if (!memberObj) return;
+
+            memberObj.avatar.classList.remove('active', 'thinking', 'eliminated');
+            if (state) memberObj.avatar.classList.add(state);
+
+            // Hide bubble when eliminated
+            if (state === 'eliminated') {
+                memberObj.bubble.classList.remove('show');
+            }
+        }
+
+        // Clear all member states
+        function clearMemberStates() {
+            Object.values(memberElements).forEach(memberObj => {
+                memberObj.avatar.classList.remove('active', 'thinking');
+            });
+        }
+
+        // Clear all speech bubbles
+        function clearAllBubbles() {
+            Object.values(memberElements).forEach(memberObj => {
+                memberObj.bubble.classList.remove('show');
+                memberObj.bubbleText.textContent = '';
+            });
+        }
+
+        // Convene the council
+        async function convene() {
+            const question = questionInput.value.trim();
+            if (!question) return;
+
+            // Reset UI
+            conveneBtn.disabled = true;
+            logContent.innerHTML = '';
+            answersContent.innerHTML = '';
+            answersPanel.classList.remove('show');
+            finalAnswer.classList.remove('show');
+            arbiterDecisionBox.classList.remove('show');
+            arbiterThrone.classList.remove('thinking');
+            clearAllBubbles();
+            Object.values(memberElements).forEach(memberObj => {
+                memberObj.avatar.classList.remove('eliminated', 'active', 'thinking');
+            });
+
+            log('Council convened...');
+            setStatus('Convening', 'The council gathers to deliberate...');
+
+            // Connect to SSE stream
+            const eventSource = new EventSource(`/api/convene?question=${encodeURIComponent(question)}`, {
+                // POST workaround: we'll use fetch instead
+            });
+
+            // Use fetch with POST for SSE
+            try {
+                const response = await fetch('/api/convene', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ question })
+                });
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    buffer += decoder.decode(value, { stream: true });
+
+                    // Parse SSE events
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop() || '';
+
+                    let eventType = '';
+                    let eventData = '';
+
+                    for (const line of lines) {
+                        if (line.startsWith('event: ')) {
+                            eventType = line.slice(7);
+                        } else if (line.startsWith('data: ')) {
+                            eventData = line.slice(6);
+                            if (eventType && eventData) {
+                                handleEvent(eventType, JSON.parse(eventData));
+                                eventType = '';
+                                eventData = '';
+                            }
+                        }
+                    }
+                }
+            } catch (e) {
+                log('Connection error: ' + e.message, 'elimination');
+            }
+
+            conveneBtn.disabled = false;
+        }
+
+        // Handle SSE events
+        function handleEvent(type, data) {
+            switch (type) {
+                case 'start':
+                    log(`Question: "${data.question}"`);
+                    log(`${data.members.length} models seated at the table`);
+                    break;
+
+                case 'round_start':
+                    setStatus(`Round ${data.round}`, `Round ${data.round} begins...`);
+                    log(`═══ ROUND ${data.round} ═══`, 'success');
+                    clearMemberStates();
+                    clearAllBubbles();
+
+                    // Clear previous round's answers
+                    answersContent.innerHTML = '';
+                    break;
+
+                case 'phase':
+                    const phaseNames = {
+                        'answering': 'Models Answering',
+                        're-evaluating': 'Re-evaluating Answers',
+                        'voting': 'Peer Voting',
+                        'arbiter': 'Arbiter Judging',
+                        'ensemble': 'Final Synthesis'
+                    };
+                    setStatus(phaseNames[data.phase] || data.phase, `Phase: ${data.phase}`);
+                    log(`Phase: ${data.phase}`);
+
+                    // Update answers header with round info
+                    if (data.round) {
+                        document.querySelector('.answers-header').textContent =
+                            `💬 Round ${data.round} Answers`;
+                    }
+                    break;
+
+                case 'member_thinking':
+                    setMemberState(data.member, 'thinking');
+                    setStatus('Deliberating', `${getShortName(data.member)} is thinking...`);
+                    break;
+
+                case 'member_answered':
+                    setMemberState(data.member, 'active');
+                    log(`${getShortName(data.member)} answered`);
+
+                    // Show answer in speech bubble
+                    const memberObj = memberElements[data.member];
+                    if (memberObj) {
+                        memberObj.bubbleText.textContent = data.answer;
+                        memberObj.bubble.classList.add('show');
+                    }
+
+                    // Show answer in answers panel
+                    answersPanel.classList.add('show');
+
+                    // Remove 'latest' class from all answer blocks
+                    document.querySelectorAll('.answer-block').forEach(el => {
+                        el.classList.remove('latest');
+                    });
+
+                    // Add new answer
+                    const answerBlock = document.createElement('div');
+                    answerBlock.className = 'answer-block latest';
+                    answerBlock.innerHTML = `
+                        <div class="answer-member">${getShortName(data.member)}</div>
+                        <div class="answer-text">${data.answer}</div>
+                    `;
+                    answersContent.appendChild(answerBlock);
+                    answersContent.scrollTop = answersContent.scrollHeight;
+                    break;
+
+                case 'member_voted':
+                    setMemberState(data.member, 'active');
+                    log(`${getShortName(data.member)} cast their vote`);
+
+                    // Show vote in speech bubble
+                    const voterObj = memberElements[data.member];
+                    if (voterObj) {
+                        voterObj.bubbleText.textContent = `🗳️ ${data.vote}`;
+                        voterObj.bubble.classList.add('show');
+                    }
+                    break;
+
+                case 'votes_collected':
+                    log('All votes have been cast');
+                    clearMemberStates();
+                    break;
+
+                case 'arbiter_thinking':
+                    arbiterThrone.classList.add('thinking');
+                    setStatus('Arbiter Deliberating', 'The Arbiter weighs the evidence...');
+                    log('The Arbiter is deliberating...');
+                    break;
+
+                case 'arbiter_decision':
+                    arbiterThrone.classList.remove('thinking');
+                    arbiterDecisionText.textContent = data.reasoning;
+                    arbiterDecisionBox.classList.add('show');
+                    log('The Arbiter has reached a decision');
+                    setStatus('Judgment Rendered', 'The Arbiter has spoken.');
+                    break;
+
+                case 'elimination':
+                    setMemberState(data.eliminated, 'eliminated');
+                    log(`💀 ELIMINATED: ${getShortName(data.eliminated)}`, 'elimination');
+                    setStatus('Elimination', `${getShortName(data.eliminated)} has been banished!`);
+                    break;
+
+                case 'final_answer':
+                    log('The council has reached consensus', 'success');
+                    setStatus('Complete', 'The council has spoken.');
+                    finalAnswerContent.textContent = data.answer;
+                    finalAnswer.classList.add('show');
+
+                    // Highlight survivors
+                    clearMemberStates();
+                    data.survivors.forEach(m => setMemberState(m, 'active'));
+                    break;
+
+                case 'end':
+                    log('Session complete');
+                    break;
+            }
+        }
+
+        // Event listeners
+        conveneBtn.addEventListener('click', convene);
+        questionInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') convene();
+        });
+
+        // Init on load
+        window.addEventListener('load', init);
+        window.addEventListener('resize', renderMembers);
+    </script>
+</body>
+
+</html>
