@@ -69,17 +69,40 @@
 
         /* Main Layout */
         main {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
             padding: 2rem;
             gap: 2rem;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .left-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        @media (max-width: 1024px) {
+            main {
+                grid-template-columns: 1fr;
+            }
+            
+            .right-panel {
+                order: -1;
+            }
         }
 
         /* Question Input */
         .question-panel {
             width: 100%;
-            max-width: 600px;
             text-align: center;
         }
 
@@ -310,7 +333,6 @@
         /* Arbiter Section */
         .arbiter-section {
             width: 100%;
-            max-width: 600px;
             text-align: center;
             margin-bottom: 1rem;
         }
@@ -360,9 +382,7 @@
             background: var(--stone-light);
             border: 2px solid var(--gold-dim);
             border-radius: 8px;
-            max-width: 500px;
-            margin-left: auto;
-            margin-right: auto;
+            width: 100%;
             opacity: 0;
             transform: translateY(-10px);
             transition: all 0.5s ease;
@@ -392,7 +412,6 @@
         /* Status Panel */
         .status-panel {
             width: 100%;
-            max-width: 600px;
             background: var(--stone-light);
             border: 1px solid var(--gold-dim);
             border-radius: 4px;
@@ -427,7 +446,6 @@
         /* Log */
         .log-panel {
             width: 100%;
-            max-width: 600px;
             background: var(--stone-light);
             border: 1px solid var(--gold-dim);
             border-radius: 4px;
@@ -472,7 +490,6 @@
         /* Answers Panel */
         .answers-panel {
             width: 100%;
-            max-width: 800px;
             background: var(--stone-light);
             border: 1px solid var(--gold-dim);
             border-radius: 4px;
@@ -531,7 +548,6 @@
         /* Final Answer */
         .final-answer {
             width: 100%;
-            max-width: 700px;
             background: linear-gradient(180deg, var(--stone-light) 0%, var(--stone) 100%);
             border: 2px solid var(--gold);
             border-radius: 4px;
@@ -629,53 +645,57 @@
     </header>
 
     <main>
-        <div class="question-panel">
-            <label for="question-input">Pose Your Question to the Council</label>
-            <div class="input-group">
-                <input type="text" id="question-input" placeholder="Ask the council anything...">
-                <button id="convene-btn">CONVENE</button>
+        <div class="left-panel">
+            <div class="question-panel">
+                <label for="question-input">Pose Your Question to the Council</label>
+                <div class="input-group">
+                    <input type="text" id="question-input" placeholder="Ask the council anything...">
+                    <button id="convene-btn">CONVENE</button>
+                </div>
+            </div>
+
+            <div class="status-panel">
+                <div class="status-header">
+                    <span class="phase-indicator" id="phase-dot"></span>
+                    <span id="phase-name">Awaiting Question</span>
+                </div>
+                <div id="status-text">The council awaits your query. Pose a question and the models shall deliberate.</div>
+            </div>
+
+            <div class="log-panel">
+                <div class="log-header">📜 Council Log</div>
+                <div id="log-content"></div>
+            </div>
+
+            <div class="answers-panel" id="answers-panel">
+                <div class="answers-header">💬 Current Answers</div>
+                <div id="answers-content"></div>
+            </div>
+
+            <div class="final-answer" id="final-answer">
+                <h2>🏆 The Council Has Spoken</h2>
+                <div class="final-answer-content" id="final-answer-content"></div>
             </div>
         </div>
 
-        <div class="arbiter-section">
-            <div class="arbiter-throne" id="arbiter-throne">
-                <div class="arbiter-avatar">⚖️</div>
-                <div class="arbiter-name" id="arbiter-name">THE ARBITER</div>
+        <div class="right-panel">
+            <div class="arbiter-section">
+                <div class="arbiter-throne" id="arbiter-throne">
+                    <div class="arbiter-avatar">⚖️</div>
+                    <div class="arbiter-name" id="arbiter-name">THE ARBITER</div>
+                </div>
+                <div class="arbiter-decision-box" id="arbiter-decision-box">
+                    <div class="arbiter-decision-label">⚖️ ARBITER'S JUDGMENT</div>
+                    <div class="arbiter-decision-text" id="arbiter-decision-text"></div>
+                </div>
             </div>
-            <div class="arbiter-decision-box" id="arbiter-decision-box">
-                <div class="arbiter-decision-label">⚖️ ARBITER'S JUDGMENT</div>
-                <div class="arbiter-decision-text" id="arbiter-decision-text"></div>
+
+            <div class="council-chamber">
+                <div class="round-table">
+                    <div class="table-center">ROUND<br>TABLE</div>
+                </div>
+                <div id="members-container"></div>
             </div>
-        </div>
-
-        <div class="council-chamber">
-            <div class="round-table">
-                <div class="table-center">ROUND<br>TABLE</div>
-            </div>
-            <div id="members-container"></div>
-        </div>
-
-        <div class="status-panel">
-            <div class="status-header">
-                <span class="phase-indicator" id="phase-dot"></span>
-                <span id="phase-name">Awaiting Question</span>
-            </div>
-            <div id="status-text">The council awaits your query. Pose a question and the models shall deliberate.</div>
-        </div>
-
-        <div class="log-panel">
-            <div class="log-header">📜 Council Log</div>
-            <div id="log-content"></div>
-        </div>
-
-        <div class="answers-panel" id="answers-panel">
-            <div class="answers-header">💬 Current Answers</div>
-            <div id="answers-content"></div>
-        </div>
-
-        <div class="final-answer" id="final-answer">
-            <h2>🏆 The Council Has Spoken</h2>
-            <div class="final-answer-content" id="final-answer-content"></div>
         </div>
     </main>
 
